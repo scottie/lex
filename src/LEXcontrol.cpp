@@ -714,7 +714,7 @@ void LEXController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 static struct event_base *gBase;
 static boost::thread LEXControlThread;
 
-static void LEXControlThread()
+static void LexControlThread()
 {
     LEXController ctrl(gBase, GetArg("-LEXcontrol", DEFAULT_LEX_CONTROL));
 
@@ -735,7 +735,7 @@ void StartLEXControl(boost::thread_group& threadGroup/*, CScheme& scheme*/)
         return;
     }
 
-    LEXControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "LEXcontrol", &LEXControlThread));
+    LEXControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "LEXcontrol", &LexControlThread));
 }
 
 void InterruptLEXControl()
