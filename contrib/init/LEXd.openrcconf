@@ -1,0 +1,26 @@
+# /etc/conf.d/LEXd: config file for /etc/init.d/LEXd
+
+# Config file location
+#BITCOIND_CONFIGFILE="/etc/LEX/LEX.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
+#BITCOIND_PIDDIR="/var/run/LEXd"
+
+# What filename to give the pidfile
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/LEXd.pid"
+
+# Where to write LEXd data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/LEXd"
+
+# User and group to own LEXd process
+#BITCOIND_USER="LEX"
+#BITCOIND_GROUP="LEX"
+
+# Path to LEXd executable
+#BITCOIND_BIN="/usr/bin/LEXd"
+
+# Nice value to run LEXd under
+#BITCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+BITCOIND_OPTS=""

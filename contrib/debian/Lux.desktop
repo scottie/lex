@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=LEX
+Comment=LEX P2P Cryptocurrency
+Exec=LEX-qt %u
+Terminal=false
+Type=Application
+Icon=LEX128
+MimeType=x-scheme-handler/LEX;
+Categories=Office;Finance;
+Name[en_AU]=LEX
