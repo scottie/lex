@@ -5,6 +5,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <stdio.h>
+#include <bignum.h>
+
 #include "chainparams.h"
 #include "consensus/merkle.h"
 #include "primitives/transaction.h"
@@ -81,19 +84,12 @@ static void convertSeed6(std::vector<CAddress>& vSeedsOut, const SeedSpec6* data
 // + Contains no strange transactions
 static Checkpoints::MapCheckpoints mapCheckpoints =
     boost::assign::map_list_of
-            ( 0,   uint256("0x00000759bb3da130d7c9aedae170da8335f5a0d01a9007e4c8d3ccd08ace6a42") )
-            ( 175,   uint256("0x000000000002611e8e3c2e460e7fcd0a39ee210b9915fc76a5573a0704bb2b33") )
-            ( 2241,   uint256("0x69e2e47fb84085c4b82b6090f701c7ac03a4e510bd1f41cc072c33061cf83a0d") )
-            ( 6901,   uint256("0x0000000000034bab666179e364e0cce7c19eaa255f1e4afd2170356acfa1a3ac") )
-            ( 25318,   uint256("0x092a04ee669d2d2241aba0ec9dcecb548c9cea9ff114b0ee52cdc7ddac98a1f4") )
-            ( 97176,   uint256("0x000000000004e4aac7926e7dbd778f21b15b62f0e4c1d424ac9e5a9889c1724a") )
-            ( 122237,   uint256("0x10f6d17326a0c439f61a21c44a172885469bb60668a0d77be82eead7209183b0") )
-            ( 203690,   uint256("0x00000000000180e78502c3c952f00bf8bba2bc9ffef60e7188c8763582f26ef4") );
+            ( 0,   uint256("0x") );
 
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
-    1514488096, // * UNIX timestamp of last checkpoint block
-    1157185,    // * total number of transactions between genesis and last checkpoint
+    1527974951, // * UNIX timestamp of last checkpoint block
+    0,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
 };
@@ -125,6 +121,33 @@ static const Checkpoints::CCheckpointData dataSegwittest = {
         0
 };
 
+void MineGenesis(CBlock genesis) {
+if(genesis.GetHash() != uint256("0x"))
+        {
+            printf("Looking for genesis block...\n");
+            uint256 hashTarget = CBigNum().SetCompact(genesis.nBits).getuint256();
+            while(uint256(genesis.GetHash()) > hashTarget)
+            {
+                ++genesis.nNonce;
+                if (genesis.nNonce == 0)
+                {
+                    printf("NONCE WRAPPED, incrementing time");
+                    std::cout << std::string("NONCE WRAPPED, incrementing time:\n");
+                    ++genesis.nTime;
+                }
+                if (genesis.nNonce % 10000 == 0)
+                {
+                    printf("Mainnet: nonce %08u: hash = %s \n", genesis.nNonce, genesis.GetHash().ToString().c_str());
+                }
+            }
+            printf("merkle root: %s\n", genesis.hashMerkleRoot.ToString().c_str());
+            printf("block.nTime = %u \n", genesis.nTime);
+            printf("block.nNonce = %u \n", genesis.nNonce);
+            printf("block.GetHash = %s\n", genesis.GetHash().ToString().c_str());
+        }
+}
+
+
 class CMainParams : public CChainParams
 {
 public:
@@ -144,7 +167,7 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1026; // 95% of 1080 is 1026
         consensus.nMinerConfirmationWindow = 1080; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.nLastPOWBlock = 6000000;
+        consensus.nLastPOWBlock = 25000000;
         // Deployment of SegWit (BIP141 and BIP143)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;        //TODO: ?
@@ -162,19 +185,20 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 4-byte int at any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0x73;
-        pchMessageStart[2] = 0xc9;
-        pchMessageStart[3] = 0xa7;
-        vAlertPubKey = ParseHex("042d13c016ed91528241bcff222989769417eb10cdb679228c91e26e26900eb9fd053cd9f16a9a2894ad5ebbd551be1a4bd23bd55023679be17f0bd3a16e6fbeba");
-        nDefaultPort = /*28666*/ 26868;
+        pchMessageStart[0] = 0xf6;
+        pchMessageStart[1] = 0x72;
+        pchMessageStart[2] = 0xc5;
+        pchMessageStart[3] = 0xc1;
+        vAlertPubKey = ParseHex("");
+        nDefaultPort = /*28666*/ 26111;
+
         nMaxReorganizationDepth = 100;
         nMinerThreads = 0;
         nMaturity = 79;
         nMasternodeCountDrift = 20;
         nModifierUpdateBlock = 615800;
 
-        const char* pszTimestamp = "LEX - Implemented New PHI Algo PoW/PoS Hybird - Parallel Masternode - ThankYou - 216k155"; // Input Activation code to activate blockchain
+        const char* pszTimestamp = "LEX - PHI Algo PoW/PoS Hybird - Parallel Masternode the next generation"; //Input Timestap to generate new genesisblock
         CMutableTransaction txNew;
         txNew.nVersion = 1;
         txNew.nTime = 1507656633;
@@ -184,42 +208,54 @@ public:
         txNew.vin[0].scriptSig = CScript() << 0 << CScriptNum(42) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].SetEmpty();
 
+
         genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime = 1507656633; //10/10/2017
+
+        genesis.nTime = 1527974951; //10/10/2017
         genesis.nBits = 0x1e0fffff;
-        genesis.nNonce = 986946;
+        genesis.nNonce = 646895;
+
         genesis.hashStateRoot = uint256(h256Touint(dev::h256("e965ffd002cd6ad0e2dc402b8044de833e06b23127ea8c3d80aec91410771495"))); // LEX
         genesis.hashUTXORoot = uint256(h256Touint(dev::sha3(dev::rlp("")))); // LEX
+        
+        // Generate genesis hash should take a while as exploit protection active in main.cpp
+        // Anti exploitation activated. Note: need to wait until the generation finished for the right genesis block generated. Otherwise none of them are valid
+        
+        //MineGenesis(genesis);
+ 		
 
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        assert(consensus.hashGenesisBlock == uint256("0x00000759bb3da130d7c9aedae170da8335f5a0d01a9007e4c8d3ccd08ace6a42"));
-        assert(genesis.hashMerkleRoot == uint256("0xe08ae0cfc35a1d70e6764f347fdc54355206adeb382446dd54c32cd0201000d3"));
+        //printf("genesis block: %s\n", consensus.hashGenesisBlock.ToString().c_str());
+        //printf("merkle root: %s\n", genesis.hashMerkleRoot.ToString().c_str());
 
-        vSeeds.push_back(CDNSSeedData("LEXseed1.LEXcore.io", "LEXseed1.LEXcore.io")); // DNSSeed
-        vSeeds.push_back(CDNSSeedData("LEXseed2.LEXcore.io", "LEXseed2.LEXcore.io")); // DNSSeed
-        vSeeds.push_back(CDNSSeedData("LEXseed3.LEXcore.io", "LEXseed3.LEXcore.io")); // DNSSeed
-        vSeeds.push_back(CDNSSeedData("LEXseed4.LEXcore.io", "LEXseed4.LEXcore.io")); // DNSSeed
-        vSeeds.push_back(CDNSSeedData("209.250.254.156", "209.250.254.156")); // Non-standard DNS request
-        vSeeds.push_back(CDNSSeedData("45.76.114.209", "45.76.114.209")); // Non-standard DNS request
-        vSeeds.push_back(CDNSSeedData("5.189.142.181", "5.189.142.181")); // Non-standard DNS request
+        assert(consensus.hashGenesisBlock == uint256("0x000002d5567be4dddc9a61addedb74a46224cf742c5e9c83f619653cdbdfaf62"));
+        assert(genesis.hashMerkleRoot == uint256("0xf466ac6f0fbbc4dca9850d71aadff5fd13c2b1d336db50679fa322b4c7e4147f"));
+
+        //vSeeds.push_back(CDNSSeedData("LEXseed1.LEXcore.io", "LEXseed1.LEXcore.io")); // DNSSeed
+        //vSeeds.push_back(CDNSSeedData("LEXseed2.LEXcore.io", "LEXseed2.LEXcore.io")); // DNSSeed
+        //vSeeds.push_back(CDNSSeedData("LEXseed3.LEXcore.io", "LEXseed3.LEXcore.io")); // DNSSeed
+        //vSeeds.push_back(CDNSSeedData("LEXseed4.LEXcore.io", "LEXseed4.LEXcore.io")); // DNSSeed
+        //vSeeds.push_back(CDNSSeedData("209.250.254.156", "209.250.254.156")); // Non-standard DNS request
+        //vSeeds.push_back(CDNSSeedData("45.76.114.209", "45.76.114.209")); // Non-standard DNS request
+        //vSeeds.push_back(CDNSSeedData("5.189.142.181", "5.189.142.181")); // Non-standard DNS request
         //vSeeds.push_back(CDNSSeedData("5.77.44.147", "5.77.44.147")); // Non-standard DNS request
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,48); // LEX address start with 'L'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,63); // LEX script addresses start with 'S'
-        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,155);
-        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x07)(0x28)(0xA2)(0x4E).convert_to_container<std::vector<unsigned char> >();
-        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x03)(0xD8)(0xA1)(0xE5).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,125);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x07)(0x18)(0xA2)(0x4E).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x02)(0xA8)(0xA1)(0xE5).convert_to_container<std::vector<unsigned char> >();
 
         bech32_hrp = "bc";
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
         fRequireRPCPassword = true;
-        fMiningRequiresPeers = true;
+        fMiningRequiresPeers = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
@@ -233,9 +269,9 @@ public:
         strDarksendPoolDummyAddress = "LgcjpYxWa5EB9KCYaRtpPgG8kgiWRvJY38";
         nStartMasternodePayments = 1507656633; // 10/10/2017
 
-        nStakingRoundPeriod = 120; // 2 minutes a round
+        nStakingRoundPeriod = 60; // 2 minutes a round
         nStakingInterval = 22;
-        nStakingMinAge = 36 * 60 * 60;
+        nStakingMinAge = 60 * 60 * 24; // 24 hours
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const
@@ -269,7 +305,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 0; // Never / undefined
-        consensus.nLastPOWBlock = 6000000;
+        consensus.nLastPOWBlock = 25000000;
 
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
@@ -319,8 +355,8 @@ public:
 
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        assert(consensus.hashGenesisBlock == uint256("0x00000c384779f87def7714b9f8d2bdb308114fc8653973f8ad64f739ed245982"));
-        assert(genesis.hashMerkleRoot == uint256("0x83b4c898e56cbec1951915b6cbd014ab4463406463a4292467bebf1dfa442a22"));
+        //assert(consensus.hashGenesisBlock == uint256("0x00000c384779f87def7714b9f8d2bdb308114fc8653973f8ad64f739ed245982"));
+        //assert(genesis.hashMerkleRoot == uint256("0x83b4c898e56cbec1951915b6cbd014ab4463406463a4292467bebf1dfa442a22"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -494,7 +530,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
-        consensus.nLastPOWBlock = 6000000;
+        consensus.nLastPOWBlock = 25000000;
 
         nSwitchPhi2Block = 1200;
         //nFirstSCBlock = 300000;
@@ -547,8 +583,8 @@ public:
 
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        assert(consensus.hashGenesisBlock == uint256("0x00000a1a2a728145f14f873037b5f4188c1b36d20f8187d329e412b97cdbaabf"));
-        assert(genesis.hashMerkleRoot == uint256("0xb35719fbe3e4d52f06d791e938de406d48defadb83beeb1fdd10c7ef52a481c2"));
+        //assert(consensus.hashGenesisBlock == uint256("0x00000a1a2a728145f14f873037b5f4188c1b36d20f8187d329e412b97cdbaabf"));
+        //assert(genesis.hashMerkleRoot == uint256("0xb35719fbe3e4d52f06d791e938de406d48defadb83beeb1fdd10c7ef52a481c2"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,48); // LEX Start letter L
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,64);

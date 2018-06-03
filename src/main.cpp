@@ -1728,23 +1728,23 @@ CAmount GetProofOfWorkReward(int64_t nFees, int nHeight)
 
     CAmount nSubsidy = 1 * COIN;
     if (nHeight < 1) {
-        nSubsidy = 1 * COIN;
+        nSubsidy = 2 * COIN;
     } else if (nHeight == 1) {
-        nSubsidy = 3000000 * COIN;
+        nSubsidy = 2000000 * COIN;
     } else if (nHeight < 500) {
-        nSubsidy = 1 * COIN;
+        nSubsidy = 2 * COIN;
     } else if (nHeight == 501) {
-        nSubsidy = 1000 * COIN;
+        nSubsidy = 2 * COIN;
     } else if (nHeight < 1000000) {
-        nSubsidy = 10 * COIN;
+        nSubsidy = 2 * COIN;
     } else if (nHeight < 1001000) {
-        nSubsidy = 30 * COIN;
+        nSubsidy = 2 * COIN;
     } else if (nHeight < 5000000) {
-        nSubsidy = 10 * COIN;
-    } else if (nHeight < 6000000) {
-        nSubsidy = 10 * COIN;
+        nSubsidy = 2 * COIN;
+    } else if (nHeight < 25000000) {
+        nSubsidy = 2 * COIN;
     } else {
-        nSubsidy = 1 * COIN;
+        nSubsidy = 0 * COIN;
     }
 
     if (nHeight < LAST_HEIGHT_FEE_BLOCK) {
@@ -1758,10 +1758,10 @@ CAmount GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight)
     CAmount nSubsidy = STATIC_POS_REWARD;
 
     // First 100,000 blocks double stake for masternode ready
-    if (nHeight < 100000) {
+    if (nHeight < 25000000) {
         nSubsidy = 2 * COIN;
     } else {
-        nSubsidy = 1 * COIN;
+        nSubsidy = 0 * COIN;
     }
 
     return nSubsidy + nFees;
@@ -1769,7 +1769,7 @@ CAmount GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees, int nHeight)
 
 CAmount GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount)
 {
-    int64_t ret = blockValue * 0.4; //40% for masternodes
+    int64_t ret = blockValue * 0.5; //40% for masternodes
 
     return ret;
 }
@@ -4871,7 +4871,7 @@ string GetWarnings(string strFor)
     string strRPC;
 
     if (!CLIENT_VERSION_IS_RELEASE)
-        strStatusBar = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
+        strStatusBar = _("This is a pre-release test build - use at your own risk");
 
     if (GetBoolArg("-testsafemode", false))
         strStatusBar = strRPC = "testsafemode enabled";

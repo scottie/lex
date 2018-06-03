@@ -82,7 +82,7 @@ struct CNodeStateStats;
 #define START_MASTERNODE_PAYMENTS_TESTNET 1432907775
 #define START_MASTERNODE_PAYMENTS 1432907775
 
-static const int64_t DARKSEND_COLLATERAL = (16120*COIN); //161.20 LEX
+static const int64_t DARKSEND_COLLATERAL = (25000*COIN); //161.20 LEX
 static const int64_t DARKSEND_FEE = (0.002*COIN); // reward masternode
 static const int64_t DARKSEND_POOL_MAX = (1999999.99*COIN);
 
@@ -127,7 +127,7 @@ static const bool DEFAULT_PEERBLOOMFILTERS = true;
 
 static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 
-static const int64_t STATIC_POS_REWARD = 1 * COIN; //Constant reward 8%
+static const int64_t STATIC_POS_REWARD = 2* COIN; //Constant reward 8%
 
 static const bool DEFAULT_LOGEVENTS = false;
 
@@ -165,7 +165,7 @@ void updateBlockSizeParams(unsigned int newBlockSize);
 //////////////////////////////////////////////////////
 
 inline bool IsProtocolV2(int nHeight) { return IsTestNet() || nHeight > 0; }
-inline int64_t GetMNCollateral(int nHeight) { return nHeight>=30000 ? 16120 : 1999999; }
+inline int64_t GetMNCollateral(int nHeight) { return nHeight>=1 ? 25000 : 1999999; }
 
 struct BlockHasher {
     size_t operator()(const uint256& hash) const { return hash.GetLow64(); }

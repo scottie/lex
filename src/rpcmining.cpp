@@ -146,7 +146,6 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
 //    bool fGenerate = true;
 //    if (params.size() > 0)
 //        fGenerate = params[0].get_bool();
-//
 //    int nGenProcLimit = -1;
 //    if (params.size() > 1) {
 //        nGenProcLimit = params[1].get_int();
@@ -197,6 +196,63 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
 //        mapArgs["-genproclimit"] = itostr(nGenProcLimit);
 ////        GenerateBitcoins(pwalletMain, nGenProcLimit);
 //    }
+
+    if (pwalletMain == NULL)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
+
+    bool fGenerate = true;
+    if (params.size() > 0)
+        fGenerate = params[0].get_bool();
+    int nGenProcLimit = -1;
+    if (params.size() > 1) {
+        nGenProcLimit = params[1].get_int();
+        if (nGenProcLimit == 0)
+            fGenerate = false;
+    }
+
+    // -regtest mode: don't return until nGenProcLimit blocks are generated
+    if (fGenerate && Params().MineBlocksOnDemand()) {
+        int nHeightStart = 0;
+        int nHeightEnd = 0;
+        int nHeight = 0;
+        int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
+        CReserveKey reservekey(pwalletMain);
+
+        { // Don't keep cs_main locked
+            LOCK(cs_main);
+            nHeightStart = chainActive.Height();
+            nHeight = nHeightStart;
+            nHeightEnd = nHeightStart + nGenerate;
+        }
+        unsigned int nExtraNonce = 0;
+        UniValue blockHashes(UniValue::VARR);
+        while (nHeight < nHeightEnd) {
+            unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, pwalletMain, false));
+            if (!pblocktemplate.get())
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+            CBlock* pblock = &pblocktemplate->block;
+            {
+                LOCK(cs_main);
+                IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
+            }
+            //TODO: Phi2_hash hardfork block here !!!
+            while (!ShutdownRequested() && !CheckProofOfWork(pblock->GetHash(/*nHeight+1 >= Params().SwitchPhi2Block()*/), pblock->nBits, Params().GetConsensus())) {
+                // Yes, there is a chance every nonce could fail to satisfy the -regtest
+                // target -- 1 in 2^(2^32). That ain't gonna happen.
+                ++pblock->nNonce;
+            }
+            CValidationState state;
+            if (!ShutdownRequested() && !ProcessNewBlock(state, Params(), NULL, pblock))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+            ++nHeight;
+            blockHashes.push_back(pblock->GetHash().GetHex());
+        }
+        return blockHashes;
+    } else { // Not -regtest: start generate thread, return immediately
+        mapArgs["-gen"] = (fGenerate ? "1" : "0");
+        mapArgs["-genproclimit"] = itostr(nGenProcLimit);
+//        GenerateBitcoins(pwalletMain, nGenProcLimit);
+    }
 
     return NullUniValue;
 }
