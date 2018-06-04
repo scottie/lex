@@ -1,0 +1,4 @@
+LEX/libbitcoin_server_a-LEXtransaction.o: LEX/LEXtransaction.cpp \
+ /usr/include/stdc-predef.h
+
+/usr/include/stdc-predef.h:
