@@ -226,9 +226,10 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
         }
         unsigned int nExtraNonce = 0;
         UniValue blockHashes(UniValue::VARR);
+	static std::unique_ptr<CBlockTemplate> pblocktemplate;
         while (nHeight < nHeightEnd) {
-            unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, pwalletMain, false));
-            if (!pblocktemplate.get())
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlockWithKey(reservekey, false);
+            if (!pblocktemplate)
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
             CBlock* pblock = &pblocktemplate->block;
             {
